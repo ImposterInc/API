@@ -4,19 +4,19 @@ exports.seed = function(knex, Promise) {
         // Inserts seed entries
         return knex('users').insert([
             {
-                user: 'Tristannica',
-                email: 'gilford.tristan@gmail.com',
-                pass: '12345'
+                user: 'aaa',
+                email: 'a@a.com',
+                pass: '$2a$10$0kaVMk15m7VxumhtaOz3V.0Ryfey7JPlJcr.ipBz87bfeZ038aYEG'
             },
             {
-                user: 'Sitle',
-                email: 'devingray13@gmail.com',
-                pass: '67890'
+                user: 'bbb',
+                email: 'b@b.com',
+                pass: '$2a$10$6WSg36SYTeCYs8UHnohmSelRsJdkC4xXi7hLcx2dwvnYpKDqCH.t2'
             },
             {
-                user: 'BigD',
-                email: 'derek.kramer88@gmail.com',
-                pass: '54321'
+                user: 'ccc',
+                email: 'c@c.com',
+                pass: '$2a$10$qtyk4GpcEFhgqoMY5F/o9.DRCjT3pAjxpSIFW9kKnkWyaF2uBut4m'
             }
         ]);
     });

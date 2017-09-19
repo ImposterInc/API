@@ -22,27 +22,75 @@ const knex = require('../db/connection');
 // });
 
 router.post('/', (req, res, next) => {
-    queries.checkUser({ user: req.body.user })
-    .then((user) => {
-        user = user[0];
+    if(req.body.userOrEmail.length && req.body.pass.length){
+        queries.checkUser(req.body.userOrEmail)
+        .then((userOrEmail) => {
+            console.log(userOrEmail);
 
-        bcrypt.compare(req.body.pass, user.pass)
-        .then((check) => {
-            if(check){
-                let token = jwt.sign({
-                    id: user.id,
-                    user: user.user,
-                    email: user.email,
-                    pass: user.pass
-                }, process.env.TOKEN);
+            if(userOrEmail.length){
+                userOrEmail = userOrEmail[0];
 
-                res.json({
-                    status: 'success',
-                    data: token
+                bcrypt.compare(req.body.pass, userOrEmail.pass)
+                .then((check) => {
+                    console.log('bcrypt compare: ', check);
+                    if(check){
+                        let token = jwt.sign({
+                            id: userOrEmail.id,
+                            user: userOrEmail.user,
+                            email: userOrEmail.email,
+                            pass: userOrEmail.pass
+                        }, process.env.TOKEN);
+
+                        res.json({
+                            status: 'success',
+                            data: token
+                        });
+
+                        return false;
+                    }
+                })
+                .catch((err) => {
+                    console.log('Error!');
+                    return next(err);
                 });
             }else{
-                res.json({
-                    status: 'failure'
+                return true;
+            }
+        })
+        .then((not) => {
+            if(not){
+                queries.checkEmail(req.body.userOrEmail)
+                .then((userOrEmail) => {
+                    if(userOrEmail.length){
+                        bcrypt.compare(req.body.pass, userOrEmail[0].pass)
+                        .then((check) => {
+                            if(check){
+                                let token = jwt.sign({
+                                    id: userOrEmail[0].id,
+                                    user: userOrEmail[0].user,
+                                    email: userOrEmail[0].email,
+                                    pass: userOrEmail[0].pass
+                                }, process.env.TOKEN);
+
+                                res.json({
+                                    status: 'success',
+                                    data: token
+                                });
+                            }else{
+                                res.json({
+                                    status: 'failure'
+                                });
+                            }
+                        })
+                        .catch((err) => {
+                            console.log('Error!');
+                            return next(err);
+                        });
+                    }
+                })
+                .catch((err) => {
+                    console.log('Error!');
+                    return next(err);
                 });
             }
         })
@@ -50,11 +98,11 @@ router.post('/', (req, res, next) => {
             console.log('Error!');
             return next(err);
         });
-    })
-    .catch((err) => {
-        console.log('Error!');
-        return next(err);
-    });
+    }else{
+        res.json({
+            status: 'failure'
+        });
+    }
 });
 
 router.get('/:id', (req, res, next) => {

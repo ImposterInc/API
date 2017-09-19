@@ -9,8 +9,11 @@ function getUser(id){
 }
 
 function checkUser(user){
-    console.log(user);
-    return knex('users').select().where(user);
+    return knex('users').select().where('user', user);
+}
+
+function checkEmail(email){
+    return knex('users').select().where('email', email);
 }
 
 function createUser(user, email, pass){
@@ -32,5 +35,6 @@ module.exports = {
     getAllUsers,
     getUser,
     checkUser,
+    checkEmail,
     createUser
 };
