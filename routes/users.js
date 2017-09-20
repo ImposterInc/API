@@ -86,6 +86,10 @@ router.post('/', (req, res, next) => {
                             console.log('Error!');
                             return next(err);
                         });
+                    }else{
+                        res.json({
+                            status: 'failure'
+                        });
                     }
                 })
                 .catch((err) => {
