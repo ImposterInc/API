@@ -9,11 +9,13 @@ function getUser(id){
 }
 
 function checkUser(user){
-    return knex('users').select().where('user', user);
+    return knex('users').select().where('user', user)
+    .then(([result]) => result);
 }
 
 function checkEmail(email){
-    return knex('users').select().where('email', email);
+    return knex('users').select().where('email', email)
+    .then(([result]) => result);
 }
 
 function createUser(user, email, pass){
