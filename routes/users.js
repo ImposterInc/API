@@ -75,6 +75,81 @@ router.post('/', (req, res, next) => {
     auth(req.body.userOrEmail, req.body.pass);
 });
 
+router.post('/signup', (req, res, next) => {
+    function create({user, email, pass, confirmPass}){
+        return Promise.resolve({user, email, pass, confirmPass})
+            .then(checkArgs)
+            .then(() => Promise.all([
+                queries.checkUser(user),
+                queries.checkEmail(email)
+            ]))
+            .then(checkExists)
+            .then(() => hashPass({user, email, pass}))
+            .then(queries.createUser)
+            .then(sendToken)
+            .catch(err => {
+                console.log(err.toString());
+
+                res.json({
+                    status: 'failure',
+                    data: err.toString()
+                });
+            });
+    }
+
+    function checkArgs({user, email, pass, confirmPass}){
+        return Promise.all([
+            checkUser(user),
+            checkEmail(email),
+            checkPass(pass, confirmPass)
+        ]);
+    }
+
+    function checkUser(user){
+        if(!user) throw new Error('Enter a username');
+        if(user.length < 5 || user.length > 20) throw new Error('Username must be between 5 and 20 characters');
+        if(user.includes('@')) throw new Error('Username cannot include \'@\' symbol');
+    }
+
+    function checkEmail(email){
+        if(!email) throw new Error('Enter an email');
+        if(email.length > 200) throw new Error('Email must be 200 characters or less');
+        if(!email.includes('@') || !email.includes('.')) throw new Error('Please enter a valid email');
+    }
+
+    function checkPass(pass, confirmPass){
+        if(!pass || !confirmPass) throw new Error('Please enter both passwords');
+        if(pass.length > 200 || pass.length < 8 || confirmPass.length > 200 || confirmPass.length < 8) throw new Error('Password must be between 8 and 200 characters');
+        if(pass !== confirmPass) throw new Error('Passwords do not match');
+    }
+
+    function checkExists(user){
+        if(user.filter(element => element !== undefined).length) throw new Error('Username or email already exists');
+    }
+
+    function hashPass({user, email, pass}){
+        return bcrypt.hash(pass, 12)
+            .then(hash => {
+                return {user, email, pass: hash};
+            });
+    }
+
+    function sendToken([user]){
+        jwt.sign({
+            id: user.id,
+            user: user.user,
+            email: user.email
+        }, process.env.TOKEN, (err, token) => {
+            res.json({
+                status: 'success',
+                data: token
+            });
+        });
+    }
+
+    create(req.body);
+});
+
 // router.post('/', (req, res, next) => {
 //     if(req.body.userOrEmail.length && req.body.pass.length){
 //         queries.checkUser(req.body.userOrEmail)
@@ -183,44 +258,44 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
-router.post('/signup', (req, res, next) => {
-    if(!req.body.user || !req.body.email || !req.body.pass){
-        res.json({
-            status: 'incomplete'
-        });
-    }else{
-        queries.checkUser({ user: req.body.user, email: req.body.email })
-        .then(user => {
-            if(user.length){
-                res.json({
-                    status: 'existing'
-                });
-            }else{
-                bcrypt.hash(req.body.pass, 10)
-                .then(pass => {
-                    queries.createUser(req.body.user, req.body.email, pass)
-                    .then(newUser => {
-                        newUser = newUser[0];
-
-                        let token = jwt.sign({
-                            id: newUser.id,
-                            user: newUser.user,
-                            email: newUser.email
-                        }, process.env.TOKEN);
-
-                        res.json({
-                            status: 'success',
-                            data: token
-                        });
-                    })
-                });
-            }
-        })
-        .catch((err) => {
-            console.log('Error!');
-            res.json(err);
-        });
-    }
-});
+// router.post('/signup', (req, res, next) => {
+//     if(!req.body.user || !req.body.email || !req.body.pass){
+//         res.json({
+//             status: 'incomplete'
+//         });
+//     }else{
+//         queries.checkUser({ user: req.body.user, email: req.body.email })
+//         .then(user => {
+//             if(user.length){
+//                 res.json({
+//                     status: 'existing'
+//                 });
+//             }else{
+//                 bcrypt.hash(req.body.pass, 10)
+//                 .then(pass => {
+//                     queries.createUser(req.body.user, req.body.email, pass)
+//                     .then(newUser => {
+//                         newUser = newUser[0];
+//
+//                         let token = jwt.sign({
+//                             id: newUser.id,
+//                             user: newUser.user,
+//                             email: newUser.email
+//                         }, process.env.TOKEN);
+//
+//                         res.json({
+//                             status: 'success',
+//                             data: token
+//                         });
+//                     })
+//                 });
+//             }
+//         })
+//         .catch((err) => {
+//             console.log('Error!');
+//             res.json(err);
+//         });
+//     }
+// });
 
 module.exports = router;

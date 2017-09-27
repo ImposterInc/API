@@ -18,18 +18,13 @@ function checkEmail(email){
     .then(([result]) => result);
 }
 
-function createUser(user, email, pass){
+function createUser({user, email, pass}){
     return knex('users')
-        .insert({
-            user: user,
-            email: email,
-            pass: pass
-        })
+        .insert({user, email, pass})
         .returning([
             'id',
             'user',
-            'email',
-            'pass'
+            'email'
         ]);
 }
 
